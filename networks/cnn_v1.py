@@ -1,5 +1,5 @@
-from keras import Model
-from keras.layers import (
+from tensorflow._api.v2.v2.keras import Model
+from tensorflow._api.v2.v2.keras.layers import (
     Dense,
     Conv1D,
     BatchNormalization,
@@ -9,19 +9,22 @@ from keras.layers import (
     Dropout,
     Layer,
 )
+from networks.interface_model_utilities import InterfaceModelUtilities
 
 
-class Cnn(Model):
-    def __init__(self, num_classes=5, input_shape=(1000, 12)):
+class CNNv1(Model, InterfaceModelUtilities):
+    def __init__(self, num_classes: int = 5, sampling_rate: int = 100):
         super().__init__()
-        self._input_shape = input_shape
-        self.cnn_block_1 = CNNBlock(32)
-        self.cnn_block_2 = CNNBlock(64)
-        self.cnn_block_3 = CNNBlock(128)
-        self.cnn_block_4 = CNNBlock(64)
-        self.cnn_block_5 = CNNBlock(32)
+        self._sampling_rate = sampling_rate
+        self._input_shape = (sampling_rate * 10, 12)
+
+        self.cnn_block_1 = CNNBlock(filters=32)
+        self.cnn_block_2 = CNNBlock(filters=64)
+        self.cnn_block_3 = CNNBlock(filters=128)
+        self.cnn_block_4 = CNNBlock(filters=64)
+        self.cnn_block_5 = CNNBlock(filters=32)
         self.global_average_pooling = GlobalAveragePooling1D()
-        self.classifier = Dense(num_classes, activation="sigmoid")
+        self.classifier = Dense(units=num_classes, activation="sigmoid")
 
     def call(self, inputs, training=False, mask=None):
         x = self.cnn_block_1(inputs, training=training)
@@ -32,17 +35,24 @@ class Cnn(Model):
         x = self.global_average_pooling(x)
         return self.classifier(x)
 
-    def model(self):
+    def model_architecture(self) -> Model:
         x = Input(shape=self._input_shape)
         return Model(inputs=[x], outputs=self.call(x))
 
+    def model_name(self) -> str:
+        return f"cnn_v1_{self._sampling_rate}"
+
+    def sampling_rate(self) -> int:
+        return self._sampling_rate
+
+    def need_3D_input(self) -> bool:
+        return False
+
 
 class CNNBlock(Layer):
-    def __init__(self, out_channels, kernel_size=3):
+    def __init__(self, filters, kernel_size=3):
         super().__init__()
-        self.conv = Conv1D(
-            filters=out_channels, kernel_size=kernel_size, padding="same"
-        )
+        self.conv = Conv1D(filters=filters, kernel_size=kernel_size, padding="same")
         self.batch_norm = BatchNormalization()
         self.leaky_relu = LeakyReLU()
         self.dropout = Dropout(rate=0.2)

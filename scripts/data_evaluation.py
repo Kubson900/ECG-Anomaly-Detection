@@ -14,7 +14,7 @@ def compute_accuracy(labels, outputs):
     return float(num_correct_recordings) / float(num_recordings)
 
 
-def plot_confusion_matrix(labels, outputs, class_names):
+def plot_confusion_matrix(labels, outputs, class_names, file_path=None):
     f, axes = plt.subplots(1, 5, figsize=(15, 5))
     axes = axes.ravel()
     for i in range(5):
@@ -27,4 +27,6 @@ def plot_confusion_matrix(labels, outputs, class_names):
 
     plt.subplots_adjust(wspace=0.5, hspace=0.5)
     f.colorbar(disp.im_, ax=axes)
+    if file_path:
+        plt.savefig(file_path)
     plt.show()

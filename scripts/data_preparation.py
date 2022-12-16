@@ -4,6 +4,7 @@ import wfdb
 import ast
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 
 # path = "../ecg_dataset/"
@@ -93,4 +94,8 @@ def get_data_ready_for_training(
 
     print(f"Reshaped ECG signals to desired shape: {X_train.shape}")
 
-    return X_train, X_test, y_train, y_test, multi_label_binarizer
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25)
+
+    print("Split training data into training|validation")
+
+    return X_train, X_val, X_test, y_train, y_val, y_test, multi_label_binarizer
