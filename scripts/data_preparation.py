@@ -2,16 +2,13 @@ import pandas as pd
 import numpy as np
 import wfdb
 import ast
+
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
 
-# path = "../ecg_dataset/"
-# sampling_rate = 100
-
-
-def load_raw_data(df, sampling_rate, path):
+def load_raw_data(df: pd.DataFrame, sampling_rate: int, path: str) -> np.ndarray:
     if sampling_rate == 100:
         data = [wfdb.rdsamp(path + f) for f in df.filename_lr]
     else:
@@ -21,8 +18,20 @@ def load_raw_data(df, sampling_rate, path):
 
 
 def get_data_ready_for_training(
-    sampling_rate: int, dataset_path: str, need_3D_input: bool = True
+    sampling_rate: int,
+    dataset_path: str,
+    input_3D: bool = True,
+    scale_features: bool = True,
+) -> (
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    MultiLabelBinarizer,
 ):
+
     # data loading
     y_data = pd.read_csv(dataset_path + "ptbxl_database.csv", index_col="ecg_id")
     y_data.scp_codes = y_data.scp_codes.apply(lambda x: ast.literal_eval(x))
@@ -61,23 +70,24 @@ def get_data_ready_for_training(
     y_train = multi_label_binarizer.transform(y_train)
     y_test = multi_label_binarizer.transform(y_test)
 
-    # scaling features
-    scaler = StandardScaler()
-
     num_train_patients, num_time_steps, num_features = X_train.shape
     num_test_patients = X_test.shape[0]
 
-    X_train = np.reshape(X_train, newshape=(-1, num_features))
-    X_test = np.reshape(X_test, newshape=(-1, num_features))
+    # scaling features
+    if scale_features:
+        scaler = StandardScaler()
 
-    scaler.fit(X_train)
+        X_train = np.reshape(X_train, newshape=(-1, num_features))
+        X_test = np.reshape(X_test, newshape=(-1, num_features))
 
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+        scaler.fit(X_train)
 
-    print("Scaled ECG signals")
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
 
-    if need_3D_input:
+        print("Scaled ECG signals")
+
+    if input_3D:
         X_train = np.reshape(
             X_train, newshape=(num_train_patients, num_time_steps, num_features, 1)
         )
@@ -91,10 +101,11 @@ def get_data_ready_for_training(
         X_test = np.reshape(
             X_test, newshape=(num_test_patients, num_time_steps, num_features)
         )
+    print(f"Reshaped ECG signals to: {X_train.shape[1:]}")
 
-    print(f"Reshaped ECG signals to desired shape: {X_train.shape}")
-
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25)
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.25, random_state=42
+    )
 
     print("Split training data into training|validation")
 
