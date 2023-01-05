@@ -186,5 +186,8 @@ fabric.properties
 
 # dataset folder
 ecg_dataset/
-Playground/
+
+# visualizations of each disease for each lead for many patients
 /ecg_visualizations/
+
+/saved_models/
