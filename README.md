@@ -2,22 +2,31 @@
 ![ECG Image](https://www.heart.org/-/media/Images/Health-Topics/Arrhythmia/ECG-normal.jpg)
 
 # Setup 📰
-* ## Install [Python](https://www.python.org/downloads/release/python-3109/)
-* ## Create [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)
+
+## Install [Python](https://www.python.org/downloads/release/python-3109/)
+## Create [venv](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment)
 ```
 python -m venv /path/to/new/virtual/environment
 ```
 ```
 .\env\Scripts\activate
 ```
-* ## Install requirements inside activated venv
+## Install requirements inside activated venv
 ```
 pip install -r /path/to/requirements.txt
 ```
 
+## Download dataset 💽
+* [Description page](https://physionet.org/content/ptb-xl/1.0.3/)
+* [Download the ZIP file](https://physionet.org/static/published-projects/ptb-xl/ptb-xl-a-large-publicly-available-electrocardiography-dataset-1.0.3.zip) (1.7GB)
+* Download the files using your terminal:
+```
+wget -r -N -c -np https://physionet.org/files/ptb-xl/1.0.3/
+```
+
 ## To make TSFEL work 🚩
-* https://github.com/fraunhoferportugal/tsfel/issues/123
-* https://github.com/scikit-multilearn/scikit-multilearn/issues/230
+  * [Problem with SciPy](https://github.com/fraunhoferportugal/tsfel/issues/123)
+  * [Problem with MLkNN](https://github.com/scikit-multilearn/scikit-multilearn/issues/230)
 
 # Directories descriptions ❔
 ## [networks](networks)
