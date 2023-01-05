@@ -191,3 +191,6 @@ ecg_dataset/
 /ecg_visualizations/
 
 /saved_models/
+
+# visualizations of most optimal thresholds for each diagnostic
+/optimal_thresholds_visualizations/

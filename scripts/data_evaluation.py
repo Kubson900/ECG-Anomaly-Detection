@@ -4,17 +4,6 @@ import numpy as np
 from sklearn.metrics import f1_score
 
 
-def compute_accuracy(labels, outputs):
-    num_recordings, num_classes = np.shape(labels)
-
-    num_correct_recordings = 0
-    for i in range(num_recordings):
-        if np.all(labels[i, :] == outputs[i, :]):
-            num_correct_recordings += 1
-
-    return float(num_correct_recordings) / float(num_recordings)
-
-
 def plot_confusion_matrix(labels, outputs, class_names, file_path=None):
     f, axes = plt.subplots(1, 5, figsize=(15, 5))
     axes = axes.ravel()
@@ -33,7 +22,9 @@ def plot_confusion_matrix(labels, outputs, class_names, file_path=None):
     plt.show()
 
 
-def plot_optimal_thresholds(y_test: np.ndarray, y_pred_proba: np.ndarray, file_path=None) -> list[float]:
+def plot_optimal_thresholds(
+    y_test: np.ndarray, y_pred_proba: np.ndarray, file_path=None
+) -> list[float]:
     thresholds = []
     f1_scores = []
     optimal_thresholds = []
@@ -46,12 +37,14 @@ def plot_optimal_thresholds(y_test: np.ndarray, y_pred_proba: np.ndarray, file_p
 
         for threshold in np.arange(0, 1.0, 0.05):
             y_pred = (y_pred_proba[:, class_index] > threshold) * 1
-            f1 = f1_score(y_test[:, class_index], y_pred, average='weighted')
+            f1 = f1_score(y_test[:, class_index], y_pred, average="weighted")
 
             class_thresholds.append(threshold)
             class_f1_scores.append(f1)
 
-        optimal_threshold = np.round(class_thresholds[np.argmax(class_f1_scores)], decimals=2)
+        optimal_threshold = np.round(
+            class_thresholds[np.argmax(class_f1_scores)], decimals=2
+        )
 
         thresholds.append(class_thresholds)
         f1_scores.append(class_f1_scores)
@@ -63,7 +56,7 @@ def plot_optimal_thresholds(y_test: np.ndarray, y_pred_proba: np.ndarray, file_p
         axes[i].plot(thresholds[i], f1_scores[i])
         axes[i].vlines(optimal_thresholds[i], 0, 1, linestyles="--", color="black")
         axes[i].set_title(class_names[i], fontsize=16)
-        axes[i].set_xlabel('Threshold')
+        axes[i].set_xlabel("Threshold")
         axes[i].set_ylabel("F1 score")
         axes[i].set_xlim(([0, 1]))
     plt.subplots_adjust(wspace=0.5, hspace=1)
