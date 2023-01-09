@@ -1,15 +1,42 @@
+from typing import Union
+
+import tensorflow as tf
+import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.font_manager as font_manager
+from matplotlib import rcParams
+from sklearn.metrics import (
+    confusion_matrix,
+    ConfusionMatrixDisplay,
+    classification_report,
+)
 import numpy as np
 from sklearn.metrics import f1_score
+import os
+from tensorflow._api.v2.v2.keras import Model
+
+# Add every font at the specified location
+font_dir = ["fonts"]
+for font in font_manager.findSystemFonts(font_dir):
+    font_manager.fontManager.addfont(font)
+
+# Set font family globally
+rcParams["font.family"] = "umr10"
 
 
-def plot_confusion_matrix(labels, outputs, class_names, file_path=None):
+def plot_confusion_matrix(
+    y_test: np.ndarray,
+    y_pred: np.ndarray,
+    class_names: list[str],
+    directory_name: str,
+    file_name: str = "confusion_matrix",
+    save_plot: bool = False,
+):
     f, axes = plt.subplots(1, 5, figsize=(15, 5))
     axes = axes.ravel()
     for i in range(5):
         disp = ConfusionMatrixDisplay(
-            confusion_matrix(labels[:, i], outputs[:, i]), display_labels=[0, i]
+            confusion_matrix(y_test[:, i], y_pred[:, i]), display_labels=[0, i]
         )
         disp.plot(ax=axes[i], values_format=".4g", cmap="magma")
         disp.ax_.set_title(f"Class {class_names[i]}")
@@ -17,13 +44,22 @@ def plot_confusion_matrix(labels, outputs, class_names, file_path=None):
 
     plt.subplots_adjust(wspace=0.5, hspace=0.5)
     f.colorbar(disp.im_, ax=axes)
-    if file_path:
-        plt.savefig(file_path)
+
+    if save_plot:
+        output_directory = f"saved_images/{directory_name}/"
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory, exist_ok=True)
+        file_path = os.path.join(output_directory, file_name)
+        plt.savefig(file_path, bbox_inches="tight")
     plt.show()
 
 
 def plot_optimal_thresholds(
-    y_test: np.ndarray, y_pred_proba: np.ndarray, file_path=None
+    y_test: np.ndarray,
+    y_pred_proba: np.ndarray,
+    directory_name: str,
+    file_name: str = "optimal_thresholds",
+    save_plot: bool = False,
 ) -> list[float]:
     thresholds = []
     f1_scores = []
@@ -61,8 +97,120 @@ def plot_optimal_thresholds(
         axes[i].set_xlim(([0, 1]))
     plt.subplots_adjust(wspace=0.5, hspace=1)
 
-    if file_path:
+    if save_plot:
+        output_directory = f"optimal_thresholds_visualizations/{directory_name}/"
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory, exist_ok=True)
+        file_path = os.path.join(output_directory, file_name)
         plt.savefig(file_path, bbox_inches="tight")
 
     plt.show()
     return optimal_thresholds
+
+
+def generate_model_evaluation(
+    y_test: np.ndarray,
+    y_pred: np.ndarray,
+    y_pred_proba: np.ndarray,
+    directory_name: str,
+    file_name: str = "model_evaluation",
+    save_data: bool = False,
+) -> pd.DataFrame:
+    binary_crossentropy_loss = tf.keras.losses.BinaryCrossentropy()
+    loss = binary_crossentropy_loss(y_test, y_pred_proba)
+
+    binary_accuracy = tf.keras.metrics.BinaryAccuracy()
+    _ = binary_accuracy.update_state(y_test, y_pred)
+
+    recall = tf.keras.metrics.Recall()
+    _ = recall.update_state(y_test, y_pred)
+
+    precision = tf.keras.metrics.Precision()
+    _ = precision.update_state(y_test, y_pred)
+
+    auc = tf.keras.metrics.AUC(multi_label=True)
+    _ = auc.update_state(y_test, y_pred)
+
+    model_evaluation = np.array(
+        [
+            loss.numpy(),
+            binary_accuracy.result().numpy(),
+            recall.result().numpy(),
+            precision.result().numpy(),
+            auc.result().numpy(),
+        ]
+    )
+    model_evaluation = np.round(model_evaluation, 3)
+    model_evaluation_df = pd.DataFrame(
+        data=model_evaluation,
+        index=["loss", "binary_accuracy", "recall", "precision", "auc"],
+    ).transpose()
+
+    if save_data:
+        output_directory = f"saved_data/{directory_name}/"
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory, exist_ok=True)
+        model_evaluation_df.to_csv(os.path.join(output_directory, file_name))
+
+    return model_evaluation_df
+
+
+def generate_classification_report(
+    y_test: np.ndarray,
+    y_pred: np.ndarray,
+    class_names: list[str],
+    directory_name: str,
+    file_name: str = "classification_report",
+    save_data: bool = False,
+) -> pd.DataFrame:
+    report = classification_report(
+        y_test,
+        y_pred,
+        target_names=class_names,
+        output_dict=True,
+    )
+    report_df = pd.DataFrame(report).transpose().round(decimals=3)
+
+    if save_data:
+        report_df.to_csv(f"saved_data/{directory_name}/{file_name}")
+
+    return report_df
+
+
+def generate_sample_patients_predictions(
+    X_test: np.ndarray,
+    y_test: np.ndarray,
+    model: Model,
+    threshold: Union[float, np.array],
+    class_names: list[str],
+    number_of_patients: int,
+    directory_name: str,
+    file_name: str = "sample_patients_predictions",
+    save_data: bool = False,
+) -> pd.DataFrame:
+
+    sample_patients_predictions_df = pd.DataFrame()
+
+    for index in range(number_of_patients):
+        patient_ecg = np.expand_dims(X_test[index], axis=0)
+        patient_ecg_prob = (model.predict(patient_ecg) > threshold) * 1
+        sample_patients_predictions_df = pd.concat(
+            [
+                sample_patients_predictions_df,
+                pd.DataFrame(
+                    data={
+                        "Predicted": np.squeeze(patient_ecg_prob),
+                        "True": y_test[index],
+                        "---------": np.array(["-" for x in range(5)]),
+                    },
+                    index=class_names,
+                ).transpose(),
+            ]
+        )
+
+    if save_data:
+        sample_patients_predictions_df.to_csv(
+            f"saved_data/{directory_name}/{file_name}"
+        )
+
+    return sample_patients_predictions_df

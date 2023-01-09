@@ -4,12 +4,23 @@
 
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
+from matplotlib import rcParams
 import numpy as np
 import os
 
 MAJOR_LW = 2.5
 MINOR_LW = 1.5
 MAX_ROWS = 10
+
+
+# Add every font at the specified location
+font_dir = ['fonts']
+for font in font_manager.findSystemFonts(font_dir):
+    font_manager.fontManager.addfont(font)
+
+# Set font family globally
+rcParams['font.family'] = 'umr10'
 
 
 def generate_ecg_plots(
@@ -70,7 +81,7 @@ def generate_ecg_plots(
         ts[rpeaks], ymin, ymax, color="m", linewidth=MINOR_LW, label="R-peaks"
     )
 
-    axs_raw[1].set_ylabel("Amplitude (mv)")
+    axs_raw[1].set_ylabel("Amplitude (mV)")
     axs_raw[1].legend(loc="center left", bbox_to_anchor=(1, 0.5))
     axs_raw[1].grid()
 

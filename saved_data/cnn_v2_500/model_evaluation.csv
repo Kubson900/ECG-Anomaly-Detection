@@ -1,2 +1,2 @@
 ,loss,binary_accuracy,recall,precision,auc
-0,0.353,0.851,0.656,0.739,0.885
+0,0.353,0.851,0.656,0.739,0.748

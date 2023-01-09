@@ -62,7 +62,9 @@ class CNNv3(Model, InterfaceModelUtilities):
         return Model(inputs=[x], outputs=self.call(x))
 
     def model_name(self) -> str:
-        return f"cnn_v3_{self._sampling_rate}"
+        if self._sampling_rate != 100:
+            return f"cnn_v3_{self._sampling_rate}"
+        return f"cnn_v3"
 
     def sampling_rate(self) -> int:
         return self._sampling_rate
