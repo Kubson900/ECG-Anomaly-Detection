@@ -2,6 +2,7 @@ from typing import Union
 
 import tensorflow as tf
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 from matplotlib import rcParams
@@ -22,6 +23,7 @@ for font in font_manager.findSystemFonts(font_dir):
 
 # Set font family globally
 rcParams["font.family"] = "umr10"
+rcParams["font.size"] = 16
 
 
 def plot_confusion_matrix(
@@ -32,25 +34,34 @@ def plot_confusion_matrix(
     file_name: str = "confusion_matrix",
     save_plot: bool = False,
 ):
-    f, axes = plt.subplots(1, 5, figsize=(15, 5))
-    axes = axes.ravel()
+    fig = plt.figure(figsize=(20, 10), dpi=400)
+    spec = matplotlib.gridspec.GridSpec(ncols=6, nrows=2)  # 6 columns evenly divides both 2 & 3
+
+    ax1 = fig.add_subplot(spec[0, 0:2])  # row 0 with axes spanning 2 cols on evens
+    ax2 = fig.add_subplot(spec[0, 2:4])
+    ax3 = fig.add_subplot(spec[0, 4:])
+    ax4 = fig.add_subplot(spec[1, 1:3])  # row 0 with axes spanning 2 cols on odds
+    ax5 = fig.add_subplot(spec[1, 3:5])
+
+    axes = [ax1, ax2, ax3, ax4, ax5]
+
     for i in range(5):
         disp = ConfusionMatrixDisplay(
-            confusion_matrix(y_test[:, i], y_pred[:, i]), display_labels=[0, i]
+            confusion_matrix(y_test[:, i], y_pred[:, i])
         )
-        disp.plot(ax=axes[i], values_format=".4g", cmap="magma")
+        disp.plot(ax=axes[i], values_format=".4g", cmap="viridis")
         disp.ax_.set_title(f"Class {class_names[i]}")
         disp.im_.colorbar.remove()
 
-    plt.subplots_adjust(wspace=0.5, hspace=0.5)
-    f.colorbar(disp.im_, ax=axes)
+    plt.subplots_adjust(wspace=8, hspace=1)
+    fig.colorbar(disp.im_, ax=axes)
 
     if save_plot:
         output_directory = f"saved_images/{directory_name}/"
         if not os.path.exists(output_directory):
             os.makedirs(output_directory, exist_ok=True)
         file_path = os.path.join(output_directory, file_name)
-        plt.savefig(file_path, bbox_inches="tight")
+        plt.savefig(file_path, bbox_inches="tight", dpi=400)
     plt.show()
 
 
@@ -91,7 +102,7 @@ def plot_optimal_thresholds(
     for i in range(number_of_classes):
         axes[i].plot(thresholds[i], f1_scores[i])
         axes[i].vlines(optimal_thresholds[i], 0, 1, linestyles="--", color="black")
-        axes[i].set_title(class_names[i], fontsize=16)
+        axes[i].set_title(class_names[i], fontsize=24)
         axes[i].set_xlabel("Threshold")
         axes[i].set_ylabel("F1 score")
         axes[i].set_xlim(([0, 1]))
@@ -102,7 +113,7 @@ def plot_optimal_thresholds(
         if not os.path.exists(output_directory):
             os.makedirs(output_directory, exist_ok=True)
         file_path = os.path.join(output_directory, file_name)
-        plt.savefig(file_path, bbox_inches="tight")
+        plt.savefig(file_path, bbox_inches="tight", dpi=400)
 
     plt.show()
     return optimal_thresholds

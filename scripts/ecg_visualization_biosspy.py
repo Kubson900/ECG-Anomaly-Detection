@@ -21,7 +21,7 @@ for font in font_manager.findSystemFonts(font_dir):
 
 # Set font family globally
 rcParams['font.family'] = 'umr10'
-
+rcParams['font.size'] = 16
 
 def generate_ecg_plots(
     ts=None,
@@ -59,11 +59,11 @@ def generate_ecg_plots(
     """
 
     fig_raw, axs_raw = plt.subplots(3, 1, sharex=True)
-    fig_raw.suptitle(f"Summary of {diagnostic} {lead}")
+    fig_raw.suptitle(f"Summary of {diagnostic} {lead}", fontsize=24)
 
     # raw signal plot (1)
     axs_raw[0].plot(ts, raw, linewidth=MAJOR_LW, label="Raw", color="C0")
-    axs_raw[0].set_ylabel("Amplitude (mV)")
+    axs_raw[0].set_ylabel("Amplitude (mV)", fontsize=12)
     axs_raw[0].legend(loc="center left", bbox_to_anchor=(1, 0.5))
     axs_raw[0].grid()
 
@@ -81,14 +81,14 @@ def generate_ecg_plots(
         ts[rpeaks], ymin, ymax, color="m", linewidth=MINOR_LW, label="R-peaks"
     )
 
-    axs_raw[1].set_ylabel("Amplitude (mV)")
+    axs_raw[1].set_ylabel("Amplitude (mV)", fontsize=12)
     axs_raw[1].legend(loc="center left", bbox_to_anchor=(1, 0.5))
     axs_raw[1].grid()
 
     # heart rate (3)
     axs_raw[2].plot(heart_rate_ts, heart_rate, linewidth=MAJOR_LW, label="Heart Rate")
-    axs_raw[2].set_xlabel("Time (s)")
-    axs_raw[2].set_ylabel("Heart Rate (bpm)")
+    axs_raw[2].set_xlabel("Time (s)", fontsize=18)
+    axs_raw[2].set_ylabel("Heart Rate (bpm)", fontsize=12)
     axs_raw[2].legend(loc="center left", bbox_to_anchor=(1, 0.5))
     axs_raw[2].grid()
 
@@ -100,9 +100,9 @@ def generate_ecg_plots(
     axs_2 = fig_2.add_subplot(gs[:, 0])
 
     axs_2.plot(templates_ts, templates.T, "m", linewidth=MINOR_LW, alpha=0.7)
-    axs_2.set_xlabel("Time (s)")
-    axs_2.set_ylabel("Amplitude (mV)")
-    axs_2.set_title(f"Template of {diagnostic} {lead}")
+    axs_2.set_xlabel("Time (s)", fontsize=18)
+    axs_2.set_ylabel("Amplitude (mV)", fontsize=18)
+    axs_2.set_title(f"Template of {diagnostic} {lead}", fontsize=24)
     axs_2.grid()
 
     output_directory = f"ecg_visualizations/{diagnostic}/{lead}/"
@@ -131,5 +131,5 @@ def generate_ecg_plots(
 
     # save to file
     if save_plot:
-        fig.savefig(summary_path, dpi=200, bbox_inches="tight")
-        fig_2.savefig(template_path, dpi=200, bbox_inches="tight")
+        fig.savefig(summary_path, dpi=400, bbox_inches="tight")
+        fig_2.savefig(template_path, dpi=400, bbox_inches="tight")
